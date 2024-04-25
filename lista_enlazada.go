@@ -48,7 +48,9 @@ func (lista *listaEnlazada[T]) InsertarUltimo(dato T) {
 		lista.primero = _crear_nodo(dato, nil)
 		lista.ultimo = lista.primero
 	} else {
-		lista.ultimo = _crear_nodo(dato, lista.ultimo)
+		aux := lista.ultimo
+		lista.ultimo = _crear_nodo(dato, nil)
+		aux.prox = lista.ultimo
 	}
 	lista.largo++
 }
