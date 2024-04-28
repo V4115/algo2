@@ -11,12 +11,15 @@ import (
 )
 
 const (
-	testVolLen6 = 10
-	testVolLen5 = 100
-	testVolLen4 = 1000
-	testVolLen3 = 10000
-	testVolLen2 = 100000
-	testVolLen1 = 1000000
+	LONGITUD_VACIA          = 0
+	PANIC_LISTA_VACIA       = "La lista esta vacia"
+	PANIC_ITERADOR_FINALIZO = "El iterador termino de iterar"
+	testVolLen6             = 10
+	testVolLen5             = 100
+	testVolLen4             = 1000
+	testVolLen3             = 10000
+	testVolLen2             = 100000
+	testVolLen1             = 1000000
 
 	testBordeVaciaLen = 200
 )
@@ -286,5 +289,219 @@ func TestBordeInvalidFunc(t *testing.T) {
 	lista5.BorrarPrimero()
 	require.PanicsWithValue(t, TDALista.PANIC_MSG_VER_PRIMERO_LISTA_VACIA, func() { lista5.VerPrimero() }, "No hay un Panic al intentar ver el primero de una lista vacia")
 	require.PanicsWithValue(t, TDALista.PANIC_MSG_BORRAR_LISTA_VACIA, func() { lista5.BorrarPrimero() }, "No hay un Panic al intentar BorrarPrimero una lista vacia")
+
+}
+
+func TestIteradorVacio(t *testing.T) {
+	lista1 := TDALista.CrearListaEnlazada[int]()
+	require.True(t, lista1.EstaVacia())
+	require.PanicsWithValue(t, PANIC_LISTA_VACIA, func() { lista1.BorrarPrimero() })
+	require.PanicsWithValue(t, PANIC_LISTA_VACIA, func() { lista1.VerPrimero() })
+	require.PanicsWithValue(t, PANIC_LISTA_VACIA, func() { lista1.VerUltimo() })
+	require.NotNil(t, lista1)
+	require.EqualValues(t, LONGITUD_VACIA, lista1.Largo())
+	iterador1 := lista1.Iterador()
+	require.NotNil(t, iterador1)
+	require.PanicsWithValue(t, PANIC_ITERADOR_FINALIZO, func() { iterador1.VerActual() })
+	require.PanicsWithValue(t, PANIC_ITERADOR_FINALIZO, func() { iterador1.Borrar() })
+	require.PanicsWithValue(t, PANIC_ITERADOR_FINALIZO, func() { iterador1.Siguiente() })
+	require.False(t, iterador1.HaySiguiente())
+}
+
+func TestIterador_InsertarPrimero(t *testing.T) {
+	//Verifica que al insertar en la posicion inicial de un iterador recien creado va a ser igual a insertarPrimero
+	lista1 := TDALista.CrearListaEnlazada[int]()
+	lista2 := TDALista.CrearListaEnlazada[int]()
+	require.True(t, lista1.EstaVacia())
+	require.True(t, lista2.EstaVacia())
+
+	iterador1 := lista1.Iterador()
+	require.NotNil(t, iterador1)
+	require.False(t, iterador1.HaySiguiente())
+
+	lista2.InsertarPrimero(9)
+	require.False(t, lista2.EstaVacia())
+
+	iterador1.Insertar(5)
+	require.True(t, iterador1.HaySiguiente())
+	iterador1.Insertar(9)
+
+	require.EqualValues(t, iterador1.VerActual(), lista2.VerPrimero())
+}
+
+func TestIteradorL_InsertarFinal(t *testing.T) {
+	//Verifica que al insertar al final del iterador, es el mismo resultado que insertarUltimo
+	lista1 := TDALista.CrearListaEnlazada[string]()
+	lista2 := TDALista.CrearListaEnlazada[string]()
+	require.True(t, lista1.EstaVacia())
+	require.True(t, lista2.EstaVacia())
+
+	lista2.InsertarPrimero("iman")
+	lista2.InsertarPrimero("foca")
+	lista2.InsertarUltimo("mate")
+
+	iterador1 := lista1.Iterador()
+	require.NotNil(t, iterador1)
+	require.False(t, iterador1.HaySiguiente())
+	iterador1.Insertar("Que")
+	require.True(t, iterador1.HaySiguiente())
+	iterador1.Siguiente()
+	iterador1.Insertar("tal?")
+	require.True(t, iterador1.HaySiguiente())
+	iterador1.Siguiente()
+	iterador1.Insertar("mate")
+	require.True(t, iterador1.HaySiguiente())
+	require.EqualValues(t, iterador1.VerActual(), lista2.VerUltimo())
+}
+
+func TestIterador_InsertarMedio(t *testing.T) {
+	//se corrobora que al insertar al medio se hace en la pos correcta
+	lista1 := TDALista.CrearListaEnlazada[float64]()
+	require.True(t, lista1.EstaVacia())
+	expectedValues := []float64{1, 2.1, 4.65, 5.5, 6.00}
+
+	for _, dato := range expectedValues {
+		lista1.InsertarUltimo(dato)
+	}
+	posInsertar := lista1.Largo() / 2 //para este caso deberia ser 3 en la posicion que inserta
+	posActual := 0
+	iterador1 := lista1.Iterador()
+
+	for iterador1.HaySiguiente() && posInsertar > posActual {
+		require.EqualValues(t, iterador1.VerActual(), expectedValues[posActual])
+		iterador1.Siguiente()
+		posActual++
+	}
+	require.EqualValues(t, 4.65, iterador1.VerActual()) //estamos en la posicion que queremos insertar
+	iterador1.Insertar(3.79)
+	require.EqualValues(t, 3.79, iterador1.VerActual())
+	require.True(t, iterador1.HaySiguiente())
+	iterador1.Siguiente()
+	require.EqualValues(t, 4.65, iterador1.VerActual())
+	expectedValues = []float64{1, 2.1, 3.79, 4.65, 5.5, 6.00}
+	posActual = 0
+	iterador2 := lista1.Iterador()
+
+	for iterador2.HaySiguiente() { //Para verificar que se inserto correctamente en el medio como queriamos
+		require.EqualValues(t, iterador2.VerActual(), expectedValues[posActual])
+		iterador2.Siguiente()
+		posActual++
+	}
+	posActual = -1 //para que empiece del 0 cuando haga ++ en cada iteracion
+	lista1.Iterar(func(i float64) bool {
+		posActual++
+		return i == expectedValues[posActual]
+	})
+	require.EqualValues(t, posActual, lista1.Largo()-1) //Si se cumple es porque coincide hasta el final de la lista esperada
+}
+
+func TestIterador_BorrarPrimero(t *testing.T) {
+	lista := TDALista.CrearListaEnlazada[string]()
+	require.True(t, lista.EstaVacia())
+	lista.InsertarPrimero("haces?")
+	lista.InsertarPrimero("que")
+	lista.InsertarPrimero("hola")
+
+	iterador := lista.Iterador()
+	require.NotNil(t, iterador)
+	require.True(t, iterador.HaySiguiente())
+	require.EqualValues(t, lista.VerPrimero(), iterador.VerActual())
+	require.EqualValues(t, "hola", iterador.VerActual())
+	require.EqualValues(t, lista.VerPrimero(), iterador.Borrar())
+}
+
+func TestIterador_BorrarFinal(t *testing.T) {
+	lista := TDALista.CrearListaEnlazada[bool]()
+	require.True(t, lista.EstaVacia())
+	lista.InsertarPrimero(false)
+	lista.InsertarPrimero(false)
+	lista.InsertarUltimo(true)
+
+	iterador := lista.Iterador()
+	require.True(t, iterador.HaySiguiente())
+	iterador.Siguiente()
+	iterador.Siguiente()
+	require.True(t, iterador.HaySiguiente())
+	require.EqualValues(t, lista.VerUltimo(), iterador.VerActual())
+	require.EqualValues(t, true, iterador.Borrar())
+}
+
+func TestIterador_BorrarMedio(t *testing.T) {
+	lista := TDALista.CrearListaEnlazada[int]()
+	require.True(t, lista.EstaVacia())
+	expectedValues := []int{18, 12, 20, 9, 0, 3, 14}
+
+	for _, dato := range expectedValues {
+		lista.InsertarUltimo(dato)
+	}
+	posBorrar := 2
+	iterador := lista.Iterador()
+
+	for i := 0; iterador.HaySiguiente() && i <= posBorrar; i++ {
+		if posBorrar == i {
+			require.EqualValues(t, iterador.VerActual(), expectedValues[i])
+			require.EqualValues(t, 20, iterador.Borrar())
+		}
+		iterador.Siguiente()
+	}
+	expectedValues = []int{18, 12, 9, 0, 3, 14}
+	posActual := -1 //para que empiece del 0 cuando haga ++ en cada iteracion
+
+	lista.Iterar(func(i int) bool {
+		posActual++
+		return i == expectedValues[posActual]
+	})
+	require.EqualValues(t, posActual, lista.Largo()-1) //Si se cumple es porque coincide hasta el final de la lista esperada
+}
+
+func TestIterador_Volumen(t *testing.T) {
+	lista := TDALista.CrearListaEnlazada[int]()
+	require.True(t, lista.EstaVacia())
+	iterador0 := lista.Iterador()
+	for i := 0; i < testVolLen4; i++ {
+		iterador0.Insertar(i)
+		iterador0.Siguiente()
+	} //Llega hasta la constante -1
+	iterador1 := lista.Iterador()
+	for i := 0; iterador1.HaySiguiente() && i <= testVolLen4; i++ {
+		require.EqualValues(t, i, iterador1.VerActual())
+		require.EqualValues(t, i, iterador1.Borrar())
+	}
+	require.False(t, iterador1.HaySiguiente())
+	require.True(t, lista.EstaVacia())
+}
+
+func TestIteradorInterno_Volumen(t *testing.T) {
+	lista := TDALista.CrearListaEnlazada[int]()
+	require.True(t, lista.EstaVacia())
+	for i := 0; i < testVolLen4; i++ {
+		lista.InsertarUltimo(i)
+		require.False(t, lista.EstaVacia())
+		require.EqualValues(t, i, lista.VerUltimo())
+	}
+	valorActual := 0
+	lista.Iterar(func(dato int) bool {
+		require.EqualValues(t, valorActual, dato)
+		valorActual++
+		return valorActual == dato
+	})
+
+}
+
+func TestIteradorInterno_Bordes(t *testing.T) {
+	lista := TDALista.CrearListaEnlazada[int]()
+	require.True(t, lista.EstaVacia())
+	//caso de que no deberia entrar ya que la lista esta vacia
+	lista.Iterar(func(dato int) bool {
+		require.False(t, lista.EstaVacia())
+		return lista.EstaVacia()
+	})
+	//caso un elemento por ver
+	lista.InsertarPrimero(99)
+	lista.Iterar(func(dato int) bool {
+		require.False(t, lista.EstaVacia())
+		require.EqualValues(t, 99, lista.VerPrimero())
+		return true
+	})
 
 }

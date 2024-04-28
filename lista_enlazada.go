@@ -141,8 +141,10 @@ func (iterator *iteradorListaEnlazada[T]) Insertar(dato T) {
 	} else {
 		nuevo := _crear_nodo(dato, iterator.actual)
 		iterator.anterior.prox = nuevo
+		iterator.actual = nuevo
+		iterator.list.largo++
 	}
-	iterator.list.largo++
+
 }
 
 func (iterator *iteradorListaEnlazada[T]) Borrar() T {
