@@ -1,4 +1,4 @@
-package lista
+package algo2_tdas_lista
 
 type Lista[T any] interface {
 
@@ -23,6 +23,26 @@ type Lista[T any] interface {
 	//Devuelve la cantidad de datos actuales en la lista
 	Largo() int
 
-	//Iterar(visitar func(T) bool)
-	//Iterador() IteradorLista[T]
+	//Itera la lista mientras que tenga elementos y el resultado de la funcion anonima que recibe sea true.
+	Iterar(visitar func(T) bool)
+
+	//Crea un dato de tipo Iterador que permite recorrer la lista
+	Iterador() IteradorLista[T]
+}
+type IteradorLista[T any] interface {
+
+	//Devuelve verdadero si hay al menos un elemento por ver
+	HaySiguiente() bool
+
+	//Devuelve el dato T del actual
+	VerActual() T
+
+	//Se mueve a la posicion siguiente de la lista
+	Siguiente()
+
+	//Inserta un dato T en la lista. Haciendo que el actual sea el siguiente de ese dato.
+	Insertar(T)
+
+	//Borra el dato actual de la lista.
+	Borrar() T
 }
