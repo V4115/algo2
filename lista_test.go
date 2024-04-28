@@ -1,4 +1,4 @@
-package lista_test
+package algo2_tdas_lista_test
 
 import (
 	"strconv"

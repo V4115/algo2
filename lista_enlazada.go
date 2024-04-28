@@ -1,4 +1,4 @@
-package lista
+package algo2_tdas_lista
 
 const (
 	PANIC_MSG_BORRAR_LISTA_VACIA      = "La lista esta vacia"
