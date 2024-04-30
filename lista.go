@@ -1,4 +1,4 @@
-package algo2_tdas_lista
+package lista
 
 type Lista[T any] interface {
 
