@@ -26,11 +26,25 @@ const (
 
 func TestListaaVacia(t *testing.T) {
 
-	require.True(t, TDALista.CrearListaEnlazada[int]().EstaVacia())
-	require.True(t, TDALista.CrearListaEnlazada[string]().EstaVacia())
-	require.True(t, TDALista.CrearListaEnlazada[rune]().EstaVacia())
-	require.True(t, TDALista.CrearListaEnlazada[float64]().EstaVacia())
-	require.True(t, TDALista.CrearListaEnlazada[bool]().EstaVacia())
+	lista1 := TDALista.CrearListaEnlazada[int]()
+	lista2 := TDALista.CrearListaEnlazada[string]()
+	lista3 := TDALista.CrearListaEnlazada[rune]()
+	lista4 := TDALista.CrearListaEnlazada[float64]()
+	lista5 := TDALista.CrearListaEnlazada[bool]()
+
+	_estaVacia[int](t, lista1)
+	_estaVacia[string](t, lista2)
+	_estaVacia[rune](t, lista3)
+	_estaVacia[float64](t, lista4)
+	_estaVacia[bool](t, lista5)
+}
+func _estaVacia[T any](t *testing.T, lista TDALista.Lista[T]) {
+
+	require.True(t, lista.EstaVacia())
+	require.EqualValues(t, lista.Largo(), 0)
+	require.PanicsWithValue(t, TDALista.PANIC_MSG_BORRAR_LISTA_VACIA, func() { lista.BorrarPrimero() }, "No hay un Panic al querer borrar el rpimer dato de una lista vacia")
+	require.PanicsWithValue(t, TDALista.PANIC_MSG_VER_PRIMERO_LISTA_VACIA, func() { lista.VerPrimero() }, "No hay un Panic al intentar ver el primero de una lista vacia")
+	require.PanicsWithValue(t, TDALista.PANIC_MSG_VER_ULTIMO_LISTA_VACIA, func() { lista.VerUltimo() }, "No hay un Panic al intentar ver el ultimo de una lista vacia")
 }
 
 func TestInsertarPrimero(t *testing.T) {
@@ -89,7 +103,7 @@ func _insertarPrimero[T any](t *testing.T, comparador func(a T, b T) bool, lista
 		require.False(t, lista.EstaVacia())
 		require.Equal(t, lista.BorrarPrimero(), datos[i])
 	}
-	require.True(t, lista.EstaVacia())
+	_estaVacia(t, lista)
 }
 
 func _insertarUltimo[T any](t *testing.T, comparador func(a T, b T) bool, lista TDALista.Lista[T], datos []T) {
@@ -104,7 +118,7 @@ func _insertarUltimo[T any](t *testing.T, comparador func(a T, b T) bool, lista 
 		require.False(t, lista.EstaVacia())
 		require.Equal(t, lista.BorrarPrimero(), datos[i])
 	}
-	require.True(t, lista.EstaVacia())
+	_estaVacia(t, lista)
 }
 
 func TestVolumen(t *testing.T) {
@@ -131,15 +145,16 @@ func _testVolumen(t *testing.T, vol int) {
 	for i := vol - 1; i >= 0; i-- {
 		require.Equal(t, lista1.BorrarPrimero(), i)
 	}
-
+	_estaVacia(t, lista1)
 	//string
 	for i := 0; i < vol; i++ {
 		lista2.InsertarPrimero(strconv.Itoa(i))
 	}
 
-	for i := vol - 1; i >= vol; i-- {
+	for i := vol - 1; i >= 0; i-- {
 		require.Equal(t, lista2.BorrarPrimero(), strconv.Itoa(i))
 	}
+	_estaVacia(t, lista2)
 
 	//rune
 	for i := 0; i < vol; i++ {
@@ -149,6 +164,7 @@ func _testVolumen(t *testing.T, vol int) {
 	for i := vol - 1; i >= 0; i-- {
 		require.Equal(t, lista3.BorrarPrimero(), rune('a'+i%('z'-'a'+1)))
 	}
+	_estaVacia(t, lista3)
 
 	//float
 	for i := 0; i < vol; i++ {
@@ -158,6 +174,7 @@ func _testVolumen(t *testing.T, vol int) {
 	for i := vol - 1; i >= 0; i-- {
 		require.Equal(t, lista4.BorrarPrimero(), float64(i)+0.534)
 	}
+	_estaVacia(t, lista4)
 
 	//bool
 	for i := 0; i < vol; i++ {
@@ -166,6 +183,7 @@ func _testVolumen(t *testing.T, vol int) {
 	for i := vol - 1; i >= 0; i-- {
 		require.Equal(t, lista5.BorrarPrimero(), i%5 == 0)
 	}
+	_estaVacia(t, lista5)
 }
 
 func TestBordeEstaVacia(t *testing.T) {
@@ -184,7 +202,7 @@ func TestBordeEstaVacia(t *testing.T) {
 		require.False(t, lista1.EstaVacia())
 		require.Equal(t, lista1.BorrarPrimero(), i)
 	}
-	require.True(t, lista1.EstaVacia())
+	_estaVacia(t, lista1)
 
 	//string
 	for i := 0; i < testBordeVaciaLen; i++ {
@@ -195,7 +213,7 @@ func TestBordeEstaVacia(t *testing.T) {
 		require.False(t, lista2.EstaVacia())
 		require.Equal(t, lista2.BorrarPrimero(), strconv.Itoa(i))
 	}
-	require.True(t, lista2.EstaVacia())
+	_estaVacia(t, lista2)
 
 	//rune
 	for i := 0; i < testBordeVaciaLen; i++ {
@@ -206,7 +224,7 @@ func TestBordeEstaVacia(t *testing.T) {
 		require.False(t, lista3.EstaVacia())
 		require.Equal(t, lista3.BorrarPrimero(), rune('a'+i%('z'-'a'+1)))
 	}
-	require.True(t, lista3.EstaVacia())
+	_estaVacia(t, lista3)
 
 	//float
 	for i := 0; i < testBordeVaciaLen; i++ {
@@ -218,7 +236,7 @@ func TestBordeEstaVacia(t *testing.T) {
 		require.Equal(t, lista4.BorrarPrimero(), float64(i)+0.456)
 	}
 
-	require.True(t, lista4.EstaVacia())
+	_estaVacia(t, lista4)
 
 	//bool
 	for i := 0; i < testBordeVaciaLen; i++ {
@@ -230,7 +248,7 @@ func TestBordeEstaVacia(t *testing.T) {
 		require.Equal(t, lista5.BorrarPrimero(), i%7 == 0)
 	}
 
-	require.True(t, lista5.EstaVacia())
+	_estaVacia(t, lista5)
 }
 
 func TestBordeInvalidFunc(t *testing.T) {
@@ -312,8 +330,8 @@ func TestIterador_InsertarPrimero(t *testing.T) {
 	//Verifica que al insertar en la posicion inicial de un iterador recien creado va a ser igual a insertarPrimero
 	lista1 := TDALista.CrearListaEnlazada[int]()
 	lista2 := TDALista.CrearListaEnlazada[int]()
-	require.True(t, lista1.EstaVacia())
-	require.True(t, lista2.EstaVacia())
+	_estaVacia(t, lista1)
+	_estaVacia(t, lista2)
 
 	iterador1 := lista1.Iterador()
 	require.NotNil(t, iterador1)
@@ -333,8 +351,8 @@ func TestIteradorL_InsertarFinal(t *testing.T) {
 	//Verifica que al insertar al final del iterador, es el mismo resultado que insertarUltimo
 	lista1 := TDALista.CrearListaEnlazada[string]()
 	lista2 := TDALista.CrearListaEnlazada[string]()
-	require.True(t, lista1.EstaVacia())
-	require.True(t, lista2.EstaVacia())
+	_estaVacia(t, lista1)
+	_estaVacia(t, lista2)
 
 	lista2.InsertarPrimero("iman")
 	lista2.InsertarPrimero("foca")
@@ -357,7 +375,7 @@ func TestIteradorL_InsertarFinal(t *testing.T) {
 func TestIterador_InsertarMedio(t *testing.T) {
 	//se corrobora que al insertar al medio se hace en la pos correcta
 	lista1 := TDALista.CrearListaEnlazada[float64]()
-	require.True(t, lista1.EstaVacia())
+	_estaVacia(t, lista1)
 	expectedValues := []float64{1, 2.1, 4.65, 5.5, 6.00}
 
 	for _, dato := range expectedValues {
@@ -397,7 +415,7 @@ func TestIterador_InsertarMedio(t *testing.T) {
 
 func TestIterador_BorrarPrimero(t *testing.T) {
 	lista := TDALista.CrearListaEnlazada[string]()
-	require.True(t, lista.EstaVacia())
+	_estaVacia(t, lista)
 	lista.InsertarPrimero("haces?")
 	lista.InsertarPrimero("que")
 	lista.InsertarPrimero("hola")
@@ -412,7 +430,7 @@ func TestIterador_BorrarPrimero(t *testing.T) {
 
 func TestIterador_BorrarFinal(t *testing.T) {
 	lista := TDALista.CrearListaEnlazada[bool]()
-	require.True(t, lista.EstaVacia())
+	_estaVacia(t, lista)
 	lista.InsertarPrimero(false)
 	lista.InsertarPrimero(false)
 	lista.InsertarUltimo(true)
@@ -428,7 +446,7 @@ func TestIterador_BorrarFinal(t *testing.T) {
 
 func TestIterador_BorrarMedio(t *testing.T) {
 	lista := TDALista.CrearListaEnlazada[int]()
-	require.True(t, lista.EstaVacia())
+	_estaVacia(t, lista)
 	expectedValues := []int{18, 12, 20, 9, 0, 3, 14}
 
 	for _, dato := range expectedValues {
@@ -456,7 +474,7 @@ func TestIterador_BorrarMedio(t *testing.T) {
 
 func TestIterador_Volumen(t *testing.T) {
 	lista := TDALista.CrearListaEnlazada[int]()
-	require.True(t, lista.EstaVacia())
+	_estaVacia(t, lista)
 	iterador0 := lista.Iterador()
 	for i := 0; i < testVolLen4; i++ {
 		iterador0.Insertar(i)
@@ -468,12 +486,12 @@ func TestIterador_Volumen(t *testing.T) {
 		require.EqualValues(t, i, iterador1.Borrar())
 	}
 	require.False(t, iterador1.HaySiguiente())
-	require.True(t, lista.EstaVacia())
+	_estaVacia(t, lista)
 }
 
 func TestIteradorInterno_Volumen(t *testing.T) {
 	lista := TDALista.CrearListaEnlazada[int]()
-	require.True(t, lista.EstaVacia())
+	_estaVacia(t, lista)
 	for i := 0; i < testVolLen4; i++ {
 		lista.InsertarUltimo(i)
 		require.False(t, lista.EstaVacia())
@@ -490,7 +508,7 @@ func TestIteradorInterno_Volumen(t *testing.T) {
 
 func TestIteradorInterno_Bordes(t *testing.T) {
 	lista := TDALista.CrearListaEnlazada[int]()
-	require.True(t, lista.EstaVacia())
+	_estaVacia(t, lista)
 	//caso de que no deberia entrar ya que la lista esta vacia
 	lista.Iterar(func(dato int) bool {
 		require.False(t, lista.EstaVacia())
