@@ -49,9 +49,8 @@ func (lista *listaEnlazada[T]) InsertarUltimo(dato T) {
 		lista.primero = _crear_nodo(dato, nil)
 		lista.ultimo = lista.primero
 	} else {
-		aux := lista.ultimo
-		lista.ultimo = _crear_nodo(dato, nil)
-		aux.prox = lista.ultimo
+		lista.ultimo.prox = _crear_nodo(dato, nil)
+		lista.ultimo = lista.ultimo.prox
 	}
 	lista.largo++
 }
@@ -59,19 +58,12 @@ func (lista *listaEnlazada[T]) InsertarUltimo(dato T) {
 func (lista *listaEnlazada[T]) BorrarPrimero() T {
 	if lista.EstaVacia() {
 		panic(PANIC_MSG_BORRAR_LISTA_VACIA)
-	} else if lista.largo == 1 {
-
-		aux := lista.primero.dato
-		lista.primero, lista.ultimo = nil, nil
-		lista.largo--
-		return aux
-	} else {
-
-		aux := lista.primero.dato
-		lista.primero = lista.primero.prox
-		lista.largo--
-		return aux
 	}
+
+	aux := lista.primero.dato
+	lista.primero = lista.primero.prox
+	lista.largo--
+	return aux
 }
 
 func (lista *listaEnlazada[T]) VerPrimero() T {
@@ -91,73 +83,75 @@ func (lista *listaEnlazada[T]) VerUltimo() T {
 }
 
 func (lista *listaEnlazada[T]) Iterar(visitar func(T) bool) {
-	actual := lista.primero
-	for actual != nil && visitar(actual.dato) {
-		actual = actual.prox
+
+	for actual := lista.primero; actual != nil; actual = actual.prox {
+		if visitar(actual.dato) == false {
+			break
+		}
 	}
 }
 
 func (lista *listaEnlazada[T]) Iterador() IteradorLista[T] {
-	iterador := new(iteradorListaEnlazada[T])
-	iterador.list = lista
-	iterador.actual = lista.primero
-	return iterador
+	return &iteradorListaEnlazada[T]{lista: lista, actual: lista.primero, anterior: nil}
 }
 
 type iteradorListaEnlazada[T any] struct {
-	list     *listaEnlazada[T]
+	lista    *listaEnlazada[T]
 	actual   *nodoLista[T]
 	anterior *nodoLista[T]
 }
 
-func (iterator *iteradorListaEnlazada[T]) sinElementos() {
-	if !iterator.HaySiguiente() {
+func (iterador *iteradorListaEnlazada[T]) sinElementos() {
+	if !iterador.HaySiguiente() {
 		panic(PANIC_ITERADOR_FINALIZO)
 	}
 }
 
-func (iterator *iteradorListaEnlazada[T]) VerActual() T {
-	iterator.sinElementos()
-	return iterator.actual.dato
+func (iterador *iteradorListaEnlazada[T]) VerActual() T {
+	iterador.sinElementos()
+	return iterador.actual.dato
 }
 
-func (iterator *iteradorListaEnlazada[T]) HaySiguiente() bool {
-	if iterator.actual != nil {
-		return true
-	}
-	return false
+func (iterador *iteradorListaEnlazada[T]) HaySiguiente() bool {
+	return iterador.actual != nil
 }
 
-func (iterator *iteradorListaEnlazada[T]) Siguiente() {
-	iterator.sinElementos()
-	iterator.anterior = iterator.actual
-	iterator.actual = iterator.actual.prox
+func (iterador *iteradorListaEnlazada[T]) Siguiente() {
+	iterador.sinElementos()
+	iterador.anterior = iterador.actual
+	iterador.actual = iterador.actual.prox
 }
 
-func (iterator *iteradorListaEnlazada[T]) Insertar(dato T) {
-	if iterator.anterior == nil {
-		iterator.list.InsertarPrimero(dato)
-		iterator.actual = iterator.list.primero
+func (iterador *iteradorListaEnlazada[T]) Insertar(dato T) {
+	
+	if iterador.anterior == nil {
+		iterador.lista.primero = _crear_nodo(dato, nil)
+		iterador.actual = iterador.lista.primero
+		iterador.lista.ultimo = iterador.lista.primero
+	} else if iterador.actual == nil {
+		iterador.lista.ultimo.prox = _crear_nodo(dato, nil)
+		iterador.lista.ultimo = iterador.lista.ultimo.prox
+		iterador.actual = iterador.lista.ultimo
 	} else {
-		nuevo := _crear_nodo(dato, iterator.actual)
-		iterator.anterior.prox = nuevo
-		iterator.actual = nuevo
-		iterator.list.largo++
+		iterador.anterior.prox = _crear_nodo(dato, iterador.actual)
+		iterador.actual = iterador.anterior.prox
 	}
-
+	iterador.lista.largo++
 }
 
-func (iterator *iteradorListaEnlazada[T]) Borrar() T {
-	iterator.sinElementos()
-	dato := iterator.actual.dato
+func (iterador *iteradorListaEnlazada[T]) Borrar() T {
+	iterador.sinElementos()
+	dato := iterador.actual.dato
+	iterador.actual = iterador.actual.prox
 
-	if iterator.HaySiguiente() {
-		iterator.actual = iterator.actual.prox
+	if !iterador.HaySiguiente() {
+		iterador.lista.ultimo = iterador.anterior
 	}
-	if iterator.anterior != nil {
-		iterator.anterior.prox = iterator.actual
+	if iterador.anterior == nil {
+		iterador.lista.primero = nil
+	} else {
+		iterador.anterior.prox = iterador.actual
 	}
-
-	iterator.list.largo--
+	iterador.lista.largo--
 	return dato
 }
