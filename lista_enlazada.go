@@ -92,11 +92,11 @@ func (lista *listaEnlazada[T]) Iterar(visitar func(T) bool) {
 }
 
 func (lista *listaEnlazada[T]) Iterador() IteradorLista[T] {
-	return &iteradorListaEnlazada[T]{list: lista, actual: lista.primero, anterior: nil}
+	return &iteradorListaEnlazada[T]{lista: lista, actual: lista.primero, anterior: nil}
 }
 
 type iteradorListaEnlazada[T any] struct {
-	list     *listaEnlazada[T]
+	lista    *listaEnlazada[T]
 	actual   *nodoLista[T]
 	anterior *nodoLista[T]
 }
@@ -123,28 +123,35 @@ func (iterador *iteradorListaEnlazada[T]) Siguiente() {
 }
 
 func (iterador *iteradorListaEnlazada[T]) Insertar(dato T) {
+	
 	if iterador.anterior == nil {
-		iterador.list.InsertarPrimero(dato)
-		iterador.actual = iterador.list.primero
+		iterador.lista.primero = _crear_nodo(dato, nil)
+		iterador.actual = iterador.lista.primero
+		iterador.lista.ultimo = iterador.lista.primero
+	} else if iterador.actual == nil {
+		iterador.lista.ultimo.prox = _crear_nodo(dato, nil)
+		iterador.lista.ultimo = iterador.lista.ultimo.prox
+		iterador.actual = iterador.lista.ultimo
 	} else {
 		iterador.anterior.prox = _crear_nodo(dato, iterador.actual)
 		iterador.actual = iterador.anterior.prox
-		iterador.list.largo++
 	}
-
+	iterador.lista.largo++
 }
 
 func (iterador *iteradorListaEnlazada[T]) Borrar() T {
 	iterador.sinElementos()
 	dato := iterador.actual.dato
+	iterador.actual = iterador.actual.prox
 
-	if iterador.HaySiguiente() {
-		iterador.actual = iterador.actual.prox
+	if !iterador.HaySiguiente() {
+		iterador.lista.ultimo = iterador.anterior
 	}
-	if iterador.anterior != nil {
+	if iterador.anterior == nil {
+		iterador.lista.primero = nil
+	} else {
 		iterador.anterior.prox = iterador.actual
 	}
-
-	iterador.list.largo--
+	iterador.lista.largo--
 	return dato
 }

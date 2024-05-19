@@ -310,7 +310,7 @@ func TestBordeInvalidFunc(t *testing.T) {
 
 }
 
-func TestIteradorVacio(t *testing.T) {
+func TestIteradorExternoVacio(t *testing.T) {
 	lista1 := TDALista.CrearListaEnlazada[int]()
 	require.True(t, lista1.EstaVacia())
 	require.PanicsWithValue(t, PANIC_LISTA_VACIA, func() { lista1.BorrarPrimero() })
@@ -326,7 +326,7 @@ func TestIteradorVacio(t *testing.T) {
 	require.False(t, iterador1.HaySiguiente())
 }
 
-func TestIterador_InsertarPrimero(t *testing.T) {
+func TestIteradorExterno_InsertarPrimero(t *testing.T) {
 	//Verifica que al insertar en la posicion inicial de un iterador recien creado va a ser igual a insertarPrimero
 	lista1 := TDALista.CrearListaEnlazada[int]()
 	lista2 := TDALista.CrearListaEnlazada[int]()
@@ -347,7 +347,7 @@ func TestIterador_InsertarPrimero(t *testing.T) {
 	require.EqualValues(t, iterador1.VerActual(), lista2.VerPrimero())
 }
 
-func TestIteradorL_InsertarFinal(t *testing.T) {
+func TestIteradorExterno_InsertarFinal(t *testing.T) {
 	//Verifica que al insertar al final del iterador, es el mismo resultado que insertarUltimo
 	lista1 := TDALista.CrearListaEnlazada[string]()
 	lista2 := TDALista.CrearListaEnlazada[string]()
@@ -372,7 +372,7 @@ func TestIteradorL_InsertarFinal(t *testing.T) {
 	require.EqualValues(t, iterador1.VerActual(), lista2.VerUltimo())
 }
 
-func TestIterador_InsertarMedio(t *testing.T) {
+func TestIteradorExterno_InsertarMedio(t *testing.T) {
 	//se corrobora que al insertar al medio se hace en la pos correcta
 	lista1 := TDALista.CrearListaEnlazada[float64]()
 	_estaVacia(t, lista1)
@@ -413,7 +413,7 @@ func TestIterador_InsertarMedio(t *testing.T) {
 	require.EqualValues(t, posActual, lista1.Largo()-1) //Si se cumple es porque coincide hasta el final de la lista esperada
 }
 
-func TestIterador_BorrarPrimero(t *testing.T) {
+func TestIteradorExterno_BorrarPrimero(t *testing.T) {
 	lista := TDALista.CrearListaEnlazada[string]()
 	_estaVacia(t, lista)
 	lista.InsertarPrimero("haces?")
@@ -428,7 +428,7 @@ func TestIterador_BorrarPrimero(t *testing.T) {
 	require.EqualValues(t, lista.VerPrimero(), iterador.Borrar())
 }
 
-func TestIterador_BorrarFinal(t *testing.T) {
+func TestIteradorExterno_BorrarFinal(t *testing.T) {
 	lista := TDALista.CrearListaEnlazada[bool]()
 	_estaVacia(t, lista)
 	lista.InsertarPrimero(false)
@@ -444,7 +444,7 @@ func TestIterador_BorrarFinal(t *testing.T) {
 	require.EqualValues(t, true, iterador.Borrar())
 }
 
-func TestIterador_BorrarMedio(t *testing.T) {
+func TestIteradorExterno_BorrarMedio(t *testing.T) {
 	lista := TDALista.CrearListaEnlazada[int]()
 	_estaVacia(t, lista)
 	expectedValues := []int{18, 12, 20, 9, 0, 3, 14}
@@ -472,7 +472,7 @@ func TestIterador_BorrarMedio(t *testing.T) {
 	require.EqualValues(t, posActual, lista.Largo()-1) //Si se cumple es porque coincide hasta el final de la lista esperada
 }
 
-func TestIterador_Volumen(t *testing.T) {
+func TestIteradorExterno_Volumen(t *testing.T) {
 	lista := TDALista.CrearListaEnlazada[int]()
 	_estaVacia(t, lista)
 	iterador0 := lista.Iterador()
@@ -487,6 +487,35 @@ func TestIterador_Volumen(t *testing.T) {
 	}
 	require.False(t, iterador1.HaySiguiente())
 	_estaVacia(t, lista)
+}
+
+func TestOperaciones_IteradorExterno_Lista(t *testing.T) {
+	lista := TDALista.CrearListaEnlazada[int]()
+	//Insetarmos al inicio con iterador, y la lista queda en estado válido. Iteramos un paso mas para volver a llegar al final y luego inserto al final con primitiva de lista, itero con otro iterador y borramos todos los elementos con primitiva de lista para ver que esté todo en orden
+	_estaVacia(t, lista)
+	iterador := lista.Iterador()
+	iterador.Insertar(10)
+	
+	require.EqualValues(t, 1, lista.Largo())
+	require.EqualValues(t, 10, lista.VerPrimero())
+	require.False(t, lista.EstaVacia())
+	require.True(t, iterador.HaySiguiente())
+	iterador.Siguiente()
+	lista.InsertarUltimo(20)
+	require.EqualValues(t, 2, lista.Largo())
+	require.EqualValues(t, 20, lista.VerUltimo())
+
+	iterador2 := lista.Iterador()
+	require.True(t, iterador2.HaySiguiente())
+	require.EqualValues(t, 10, iterador2.VerActual())
+	iterador2.Siguiente()
+	require.True(t, iterador2.HaySiguiente())
+	require.EqualValues(t, 20, iterador2.VerActual())
+
+	require.EqualValues(t, 20, iterador2.Borrar())
+	require.EqualValues(t, 10, lista.BorrarPrimero())
+	_estaVacia(t, lista)
+	require.EqualValues(t, 0, lista.Largo())
 }
 
 func TestIteradorInterno_Volumen(t *testing.T) {
@@ -522,4 +551,26 @@ func TestIteradorInterno_Bordes(t *testing.T) {
 		return true
 	})
 
+}
+
+func TestIteradorExterno_BorraAlFinal(t *testing.T) {
+	// Borra el ultimo de una lista (con mas de un elemento). La lista queda en un estado valido. Probamos ver último, y también borrar todos hasta llegar al último
+	lista := TDALista.CrearListaEnlazada[int]()
+	_estaVacia(t, lista)
+	lista.InsertarPrimero(1)
+	lista.InsertarUltimo(2)
+	lista.InsertarUltimo(3)
+	lista.InsertarUltimo(4)
+	lista.InsertarUltimo(5)
+	require.EqualValues(t, 5, lista.VerUltimo())
+	require.False(t, lista.EstaVacia())
+	iterador := lista.Iterador()
+	require.True(t, iterador.HaySiguiente())
+
+	for position := 1; iterador.HaySiguiente() && position < lista.Largo(); position++ {
+		iterador.Siguiente()
+	}
+	require.EqualValues(t, 5, iterador.VerActual())
+	require.EqualValues(t, 5, iterador.Borrar())
+	require.EqualValues(t, 4, lista.VerUltimo())
 }
